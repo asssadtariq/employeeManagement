@@ -1,3 +1,18 @@
+<?php
+require_once "../confi.php";
+session_start();
+
+$userEmail = $_SESSION['user_email'];
+
+$query = "SELECT emp_id FROM employees WHERE (username = '$userEmail')";
+$query_result = mysqli_query($conn, $query);
+$query_data = mysqli_fetch_assoc($query_result);
+$empID = $query_data['emp_id'];
+$query1 = "SELECT att_date, status from attendance WHERE (attendance.emp_id = '$empID')";
+$query1_result = mysqli_query($conn, $query1);
+
+?>
+
 <!doctype html>
 <html lang="en">
 
@@ -37,12 +52,38 @@
 
     <div class="emp-att">
         <div class="search-box my-2">
-            <form action="">
+            <form action="" method="POST">
                 <div class="input-group mb-3" style="margin-right: 4px;">
-                    <input type="text" class="form-control" aria-label="Text input with dropdown button" placeholder="Search Here ... " style="width: 990px;">
-                    <button class="btn btn-dark btn-lg"> Search </button>
+                    <input type="text" class="form-control" aria-label="Text input with dropdown button" placeholder="Search Here ... " style="width: 990px;" name="empAttInfo">
+                    <button class="btn btn-dark btn-lg" name="searchEmpAtt"> Search </button>
+                    <button class="btn btn-dark btn-lg mx-2" name="disAll"> Display All </button>
                 </div>
             </form>
+            <?php
+            if (isset($_POST['searchEmpAtt']) && $_POST['empAttInfo']) {
+                unset($_POST['searchEmpAtt']);
+                $check = $_POST['empAttInfo'][0];
+                $check = strtoupper($check);
+                $check2 = $_POST['empAttInfo']; 
+
+                if ($check == 'P' || $check == 'L' || $check == 'A') {
+                    $query1 = "SELECT att_date, status from attendance WHERE (emp_id = '$empID' AND status = '$check')";
+                }
+
+                else {
+                    $query1 = "SELECT att_date, status from attendance WHERE (emp_id = '$empID' AND att_date LIKE '%$check2%')";
+                }
+
+                $query1_result = mysqli_query($conn, $query1);
+            }
+
+            if (isset($_POST['disAll'])) {
+                unset($_POST['disAll']);
+                $query1 = "SELECT att_date, status from attendance WHERE (attendance.emp_id = '$empID')";
+                $query1_result = mysqli_query($conn, $query1);
+            }
+
+            ?>
         </div>
         <div class="att-tab">
             <table class="table text-center">
@@ -51,11 +92,21 @@
                     <th> Date </th>
                     <th> Attendance </th>
                 </thead>
-                <tbody>
-                    <td style="text-align: left;"> 1 </td>
-                    <td> 28/4/2021 </td>
-                    <td> P </td>
-                </tbody>
+                <?php
+                $counter = 1;
+                if (@mysqli_num_rows($query1_result) >= 1) {
+                    while ($query1_data = mysqli_fetch_assoc($query1_result)) {
+                ?>
+                        <tbody>
+                            <td style="text-align: left;"> <?php echo $counter ?> </td>
+                            <td> <?php echo $query1_data['att_date']; ?> </td>
+                            <td> <?php echo $query1_data['status']; ?> </td>
+                        </tbody>
+
+                <?php $counter++;
+                    }
+                } ?>
+
             </table>
         </div>
     </div>

@@ -1,49 +1,84 @@
+<?php
+session_start();
+
+require_once "../confi.php";
+if (@$_SESSION['user_type'] == "Admin") {
+  header("location:../Admin/admin_home.php");
+} else if (@$_SESSION['user_type'] == "Employee") {
+  header("location:../Employees/emp_home.php");
+}
+
+?>
 <!DOCTYPE html>
 <html lang="en">
 
 <head>
-  <meta charset="UTF-8">
-  <title>Codeza-Login</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-F3w7mX95PdgyTmZZMECAngseQB83DfGTowi0iMjiWaeVhAn4FJkqJByhZMI3AhiU" crossorigin="anonymous">
-  <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
-  <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/5.0.0/normalize.min.css">
+  <!-- Required meta tags -->
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-uWxY/CJNBR+1zjPWmfnSnVxwRheevXITnMqoEIeG1LJrdI0GlVs/9cVSyPYXdcSF" crossorigin="anonymous">
+  <link rel='stylesheet' href='https://netdna.bootstrapcdn.com/bootstrap/3.0.2/css/bootstrap.min.css'>
   <link rel="stylesheet" href="login.css">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/prefixfree/1.0.7/prefixfree.min.js"></script>
 
 </head>
 
 <body>
-  <!-- partial:index.partial.html -->
-  <div class="wrapper">
-    <h2 class="text-light fs-1">Codeza</h2>
-    <form class="login">
-      <p class="title">Log in</p>
-      <input type="text" placeholder="Username" autofocus />
-      <i class="fa fa-user  "></i>
-      <input type="password" placeholder="Password" />
-      <i class="fa fa-key"></i>
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark" style="height: 100px;">
+    <div class="container-fluid">
+      <a class="navbar-brand" style="font-size: 45px;" href="#">Codeza</a>
+    </div>
+  </nav>
 
-      <select name="type" id="admin_emp" class="btn btn-dark my-2"> Select As ..
-        <option value="employee"> Employee </options>
-        <option value="admin"> Admin </options>
-      </select>
-      <br>
-      <a href="#">Forgot your password?</a>
-      <button class="bg-primary">
-        <i class="spinner"></i>
-        <span class="state fs-3">CONNECT</span>
-      </button>
+  <div class="wrapper w-100 d-flex justify-content-center">
+    <form class="form-signin w-50" method="POST">
+      <h2 class="form-signin-heading text-center">Please Login</h2>
+      <input type="email" class="form-control" name="username" placeholder="Email Address" required="" autofocus="" />
+      <input type="password" class="form-control" name="userpass" placeholder="Password" required="" />
+      <select name="type" id="sel_user" class="form-select fs-3 my-2" aria-label="Default select example">
+        <option value="emp">Employee</option>
+        <option value="admin">Admin</option>
+      </select> <br>
+      <button class="btn btn-lg btn-dark btn-block" name="connect" type="submit">Login</button>
     </form>
-    </p>
   </div>
 
   <!-- partial -->
 
-  <script src='https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js'></script>
   <script src="login.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.1/dist/js/bootstrap.bundle.min.js" integrity="sha384-/bQdsTh/da6pkI1MST/rWKFNjaCP5gBSY4sEBT38Q/9RBh9AH40zEOg7Hlq2THRZ" crossorigin="anonymous"></script>
+  <!-- Option 1: Bootstrap Bundle with Popper -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-kQtW33rZJAHjgefvhyyzcGF3C5TFyBQBA13V1RKPf4uH+bwyzQxZ6CmMZHmNBEfJ" crossorigin="anonymous"></script>
+
 
 </body>
 
 </html>
+
+<?php
+if (isset($_POST['connect'])) {
+  unset($_POST['connect']);
+
+  $user = $_POST['username'];
+  $pass = $_POST['userpass'];
+
+  if ($_POST['type'] == "admin") {
+    $query = "SELECT * FROM admins WHERE(username = '$user' AND password = '$pass')";
+    $result = mysqli_query($conn, $query);
+  } else if ($_POST['type'] == "emp") {
+    $query = "SELECT * FROM employees WHERE(username = '$user' AND password = '$pass')";
+    $result = mysqli_query($conn, $query);
+  }
+
+  if (@mysqli_num_rows($result) >= 1) {
+    $_SESSION['user_email'] = $user;
+    if ($_POST['type'] == "admin") {
+      $_SESSION['user_type'] = "Admin";
+      header("location:../Admin/admin_home.php");
+    } else if ($_POST['type'] == "emp") {
+      $_SESSION['user_type'] = "Employee";
+      header("location:../Employees/emp_home.php");
+    }
+  }
+}
+?>

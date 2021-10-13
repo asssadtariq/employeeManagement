@@ -1,3 +1,19 @@
+<?php
+require_once "../confi.php";
+session_start();
+
+$userEmail = $_SESSION['user_email'];
+
+$query = "SELECT emp_id FROM employees WHERE (username = '$userEmail')";
+$query_result = mysqli_query($conn, $query);
+$query_data = mysqli_fetch_assoc($query_result);
+$empID = $query_data['emp_id'];
+
+$query1 = "SELECT new_sal, sal_date from salaries WHERE (emp_id = '$empID')";
+$query1_result = mysqli_query($conn, $query1);
+
+?>
+
 <!doctype html>
 <html lang="en">
 
@@ -35,15 +51,37 @@
             </div>
     </nav>
 
-    <div class="emp-att">
+    <div class="emp-sal">
         <div class="search-box my-2">
-            <form action="">
-            <div class="input-group mb-3" style="margin-right: 4px;">
-                <input type="text" class="form-control" aria-label="Text input with dropdown button" placeholder="Search Here ... " style="width: 990px;">
-                <button class="btn btn-dark btn-lg"> Search </button>
-            </div>
+            <form action="" method="POST">
+                <div class="input-group mb-3" style="margin-right: 4px;">
+                    <input type="text" class="form-control" aria-label="Text input with dropdown button" placeholder="Search Here ... " style="width: 990px;" name="empSalInfo">
+                    <button class="btn btn-dark btn-lg" name="searchEmpSal"> Search </button>
+                    <button class="btn btn-dark btn-lg mx-2" name="disAll"> Display All </button>
+                </div>
             </form>
+            <?php
+            if (isset($_POST['searchEmpSal']) && $_POST['empSalInfo']) {
+                unset($_POST['searchEmpSal']);
+                $check = $_POST['empSalInfo'];
+
+                $query1 = "SELECT new_sal, sal_date from salaries WHERE (emp_id = '$empID' AND new_sal = '$check')";
+                $query1_result = mysqli_query($conn, $query1);
+                if (mysqli_num_rows($query1_result) <= 0) {
+                    $query1 = "SELECT new_sal, sal_date from salaries WHERE (emp_id = '$empID' AND sal_date LIKE '%$check%')";
+                    $query1_result = mysqli_query($conn, $query1);
+                }
+            }
+
+            if (isset($_POST['disAll'])) {
+                unset($_POST['disAll']);
+                $query1 = "SELECT new_sal, sal_date from salaries WHERE (emp_id = '$empID')";
+                $query1_result = mysqli_query($conn, $query1);
+            }
+
+            ?>
         </div>
+
         <div class="att-tab">
             <table class="table text-center">
                 <thead class="table-dark">
@@ -51,11 +89,21 @@
                     <th> Date </th>
                     <th> Salary </th>
                 </thead>
-                <tbody>
-                    <td style="text-align: left;"> 1 </td>
-                    <td> 28/4/2021 </td>
-                    <td> 25000 </td>
-                </tbody>
+                <?php
+                $counter = 1;
+                if (@mysqli_num_rows($query1_result) >= 1) {
+                    while ($query1_data = mysqli_fetch_assoc($query1_result)) {
+                ?>
+                        <tbody>
+                            <td style="text-align: left;"> <?php echo $counter ?> </td>
+                            <td> <?php echo $query1_data['sal_date']; ?> </td>
+                            <td> <?php echo $query1_data['new_sal']; ?> </td>
+                        </tbody>
+
+                <?php $counter++;
+                    }
+                } ?>
+
             </table>
         </div>
     </div>
